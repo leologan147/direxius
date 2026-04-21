@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIREXIUS — Motor de Inteligência Digital</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #06060f;
+      color: #e8e4f8;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 4px; }
+
+    /* BG Grid */
+    #bg-grid {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px);
+      background-size: 52px 52px;
+    }
+
+    /* Screens */
+    .screen { position: relative; z-index: 1; display: none; }
+    .screen.active { display: block; }
+
+    /* ── HOME ─────────────────────────────────── */
+    #screen-home {
+      display: none;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    #screen-home.active { display: flex; }
+
+    .home-inner { max-width: 580px; width: 100%; text-align: center; }
+
+    .eyebrow {
+      font-size: 10px; letter-spacing: 0.2em; color: #8b5cf6;
+      text-transform: uppercase; font-style: italic; margin-bottom: 8px;
+      display: block;
+    }
+
+    .logo {
+      font-size: clamp(36px, 8vw, 60px); font-weight: 700;
+      letter-spacing: -0.03em; color: #f0ecff;
+      text-shadow: 0 0 60px rgba(139,92,246,0.25);
+      line-height: 1;
+    }
+
+    .logo-line {
+      width: 40px; height: 2px;
+      background: linear-gradient(90deg, transparent, #8b5cf6, transparent);
+      margin: 14px auto 20px;
+    }
+
+    .home-sub { color: #5a5870; font-size: 15px; line-height: 1.7; margin-bottom: 36px; }
+
+    .module-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 36px; text-align: left; }
+
+    .module-item {
+      display: flex; align-items: center; gap: 14px;
+      background: #0e0e1a; border: 1px solid #1e1e32;
+      border-radius: 10px; padding: 12px 16px;
+    }
+    .module-item-icon { font-size: 22px; flex-shrink: 0; }
+    .module-item-label { font-size: 13px; font-weight: 700; }
+    .module-item-desc { font-size: 11px; color: #44445a; margin-top: 2px; }
+    .module-dot {
+      margin-left: auto; width: 8px; height: 8px;
+      border-radius: 50%; flex-shrink: 0;
+    }
+
+    .home-note { color: #2a2a3a; font-size: 11px; margin-top: 14px; }
+
+    /* ── FORM ─────────────────────────────────── */
+    #screen-form { min-height: 100vh; padding: 32px 20px 80px; }
+
+    .form-inner { max-width: 720px; margin: 0 auto; }
+
+    .form-header { text-align: center; margin-bottom: 28px; }
+    .form-header .logo { font-size: 28px; }
+    .form-header p { color: #44445a; font-size: 13px; margin-top: 6px; }
+
+    .tab-bar {
+      display: flex; gap: 4px;
+      background: #08080f; border-radius: 10px; padding: 4px;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      flex: 1; padding: 9px 4px; border: none; border-radius: 7px;
+      background: transparent; color: #44445a;
+      font-size: 12px; cursor: pointer; letter-spacing: 0.04em;
+      border-bottom: 2px solid transparent; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .tab-btn.active {
+      background: #14142a; color: #e8e4f8; font-weight: 700;
+      border-bottom-color: #8b5cf6;
+    }
+
+    .card {
+      background: #0e0e1a; border: 1px solid #1e1e32;
+      border-radius: 10px; padding: 24px;
+    }
+
+    .fields { display: flex; flex-direction: column; gap: 16px; }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 500px) { .row2 { grid-template-columns: 1fr; } }
+
+    .field-label {
+      display: block; font-size: 10px; color: #4a4a6a;
+      margin-bottom: 6px; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .field-label .req { color: #8b5cf6; margin-left: 3px; }
+
+    input, textarea, select {
+      width: 100%; padding: 10px 12px;
+      background: #06060f; border: 1px solid #1e1e32;
+      border-radius: 7px; color: #e8e4f8; font-size: 13px;
+      outline: none; font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: #8b5cf6; }
+    input::placeholder, textarea::placeholder { color: #2a2a3a; }
+    textarea { resize: vertical; line-height: 1.6; }
+    select { cursor: pointer; }
+
+    .info-box {
+      background: rgba(139,92,246,0.06);
+      border: 1px solid rgba(139,92,246,0.15);
+      border-radius: 7px; padding: 10px 14px;
+      font-size: 12px; color: #6a6a8a; line-height: 1.6;
+    }
+
+    /* Module selection */
+    .module-select-btn {
+      display: flex; align-items: center; gap: 14px;
+      border: 1px solid #1e1e32; background: #08080f;
+      border-radius: 10px; padding: 14px 16px;
+      cursor: pointer; width: 100%; text-align: left;
+      transition: all 0.15s; font-family: inherit;
+    }
+    .module-select-btn.selected { background: rgba(139,92,246,0.08); }
+    .module-select-btn-icon { font-size: 22px; flex-shrink: 0; }
+    .module-select-btn-label { font-size: 13px; font-weight: 700; color: #6a6a8a; }
+    .module-select-btn.selected .module-select-btn-label { color: #8b5cf6; }
+    .module-select-btn-desc { font-size: 11px; color: #44445a; margin-top: 2px; }
+    .module-check {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid #2a2a3a; background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: #fff; flex-shrink: 0; margin-left: auto;
+      transition: all 0.15s;
+    }
+    .module-select-btn.selected .module-check {
+      background: #8b5cf6; border-color: #8b5cf6;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      display: block; width: 100%; padding: 14px 24px; margin-top: 16px;
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+      border: none; border-radius: 8px; color: #fff;
+      font-size: 14px; font-weight: 700; letter-spacing: 0.06em;
+      cursor: pointer; font-family: inherit; transition: opacity 0.2s;
+    }
+    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .btn-outline {
+      padding: 8px 14px; background: transparent;
+      border: 1px solid #2a2a3a; border-radius: 7px;
+      color: #6a6a8a; font-size: 12px; cursor: pointer;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .btn-outline:hover { border-color: #4a4a6a; color: #8a8aaa; }
+
+    .btn-back {
+      padding: 14px 18px; background: transparent;
+      border: 1px solid #1e1e32; border-radius: 8px;
+      color: #6a6a8a; font-size: 14px; cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-row .btn-primary { margin-top: 0; flex: 1; }
+
+    .form-note { font-size: 11px; color: #3a3a5a; text-align: center; margin-top: 8px; }
+
+    /* ── API KEY MODAL ─────────────────────────── */
+    #apikey-banner {
+      background: rgba(139,92,246,0.1);
+      border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 10px; padding: 16px 20px;
+      margin-bottom: 20px; font-size: 13px; color: #c8c4d8;
+      line-height: 1.6;
+    }
+    #apikey-banner strong { color: #8b5cf6; }
+    #apikey-banner input { margin-top: 10px; }
+
+    /* ── LOADING ──────────────────────────────── */
+    #screen-loading {
+      display: none; min-height: 100vh;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 32px; padding: 24px;
+    }
+    #screen-loading.active { display: flex; }
+
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(139,92,246,0.2);
+      border-top-color: #8b5cf6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-title { font-size: 26px; font-weight: 700; color: #f0ecff; margin-top: 16px; }
+    .loading-msg { color: #8b5cf6; font-size: 14px; letter-spacing: 0.08em; }
+    .loading-sub { color: #3a3a5a; font-size: 12px; }
+
+    .progress-wrap { width: 100%; max-width: 400px; }
+    .progress-meta { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 11px; color: #44445a; }
+    .progress-bar-bg { background: #0e0e1a; border-radius: 6px; height: 6px; overflow: hidden; }
+    .progress-bar-fill {
+      height: 100%; border-radius: 6px;
+      background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+      transition: width 0.5s ease;
+    }
+
+    .loading-modules { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 400px; }
+    .loading-mod { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #3a3a5a; }
+
+    /* ── RESULT ───────────────────────────────── */
+    #screen-result { display: none; }
+    #screen-result.active { display: flex; min-height: 100vh; }
+
+    .result-sidebar {
+      width: 220px; flex-shrink: 0;
+      background: #08080f; border-right: 1px solid #1e1e32;
+      padding: 24px 12px; display: flex; flex-direction: column; gap: 6px;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    }
+
+    .sidebar-profile { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #1e1e32; }
+    .sidebar-profile .eyebrow { display: block; margin-bottom: 4px; }
+    .sidebar-profile-name { font-size: 13px; font-weight: 700; color: #e8e4f8; }
+    .sidebar-profile-city { font-size: 11px; color: #3a3a5a; margin-top: 2px; }
+
+    .sidebar-mod-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px; border-radius: 8px; border: none;
+      background: transparent; cursor: pointer; text-align: left;
+      width: 100%; border-left: 3px solid transparent;
+      transition: all 0.15s; font-family: inherit;
+    }
+    .sidebar-mod-btn:hover { background: rgba(139,92,246,0.05); }
+    .sidebar-mod-btn.active { border-left-color: var(--mod-color); background: rgba(139,92,246,0.08); }
+    .sidebar-mod-icon { font-size: 16px; flex-shrink: 0; }
+    .sidebar-mod-label {
+      font-size: 11px; font-weight: 700; color: #3a3a5a;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sidebar-mod-btn.done .sidebar-mod-label { color: #6a6a8a; }
+    .sidebar-mod-btn.active .sidebar-mod-label { color: var(--mod-color); }
+    .sidebar-mod-status { font-size: 9px; color: #3a3a5a; margin-top: 1px; }
+    .sidebar-mod-btn.done .sidebar-mod-status { color: #4a8a4a; }
+
+    .sidebar-actions { margin-top: auto; padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sidebar-actions .btn-outline { width: 100%; font-size: 11px; text-align: center; }
+
+    .result-main { flex: 1; padding: 32px 28px; overflow-y: auto; max-height: 100vh; }
+    @media (max-width: 600px) {
+      #screen-result.active { flex-direction: column; }
+      .result-sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; overflow-x: auto; }
+      .result-main { padding: 20px 16px; }
+    }
+
+    .result-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .result-header-icon { font-size: 28px; }
+    .result-header h2 { margin: 0; font-size: 20px; font-weight: 700; }
+    .result-header-sub { margin: 0; font-size: 12px; color: #44445a; }
+    .result-header .btn-outline { margin-left: auto; }
+
+    .result-empty {
+      display: flex; align-items: center; justify-content: center;
+      height: 60vh; flex-direction: column; gap: 16px;
+    }
+    .result-empty-icon { font-size: 48px; }
+    .result-empty p { color: #44445a; text-align: center; line-height: 1.6; }
+
+    .result-error {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px; padding: 16px; color: #ef4444; font-size: 14px;
+    }
+
+    /* Result sections */
+    .result-sections { display: flex; flex-direction: column; gap: 12px; }
+
+    .result-section {
+      background: #0e0e1a; border: 1px solid #1e1e32;
+      border-radius: 10px; overflow: hidden; transition: border-color 0.2s;
+    }
+    .result-section-header {
+      width: 100%; display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px; background: none; border: none;
+      cursor: pointer; text-align: left; font-family: inherit;
+    }
+    .result-section-header:hover { background: rgba(255,255,255,0.02); }
+    .result-section-emoji { font-size: 16px; }
+    .result-section-title { flex: 1; font-size: 13px; font-weight: 700; color: #8a8aaa; }
+    .result-section.open .result-section-title { color: var(--sec-color, #8b5cf6); }
+    .result-section-chevron { color: #44445a; font-size: 11px; transition: transform 0.2s; }
+    .result-section.open .result-section-chevron { transform: rotate(180deg); }
+    .result-section-body {
+      display: none; padding: 4px 18px 18px;
+      border-top: 1px solid rgba(139,92,246,0.15);
+      font-size: 14px; line-height: 1.9; color: #c8c4d8;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .result-section.open .result-section-body { display: block; }
+    .result-section-body strong { color: #e8e4f8; font-weight: 700; }
+
+    .result-plain {
+      background: #0e0e1a; border: 1px solid #1e1e32;
+      border-radius: 10px; padding: 24px;
+      font-size: 14px; line-height: 1.9; color: #c8c4d8;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .result-plain strong { color: #e8e4f8; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div id="bg-grid"></div>
+
+  <!-- ── HOME ────────────────────────────────── -->
+  <div id="screen-home" class="screen active">
+    <div class="home-inner">
+      <span class="eyebrow">Pesquisa Real · Dados Atuais · Estratégia de Nicho</span>
+      <h1 class="logo">DIREXIUS</h1>
+      <div class="logo-line"></div>
+      <p class="home-sub">
+        Analisa o mercado real do seu nicho no Instagram,<br>
+        gera hashtags com dados reais, estratégia de conteúdo<br>
+        e guia de postagem — usando busca na web ao vivo.
+      </p>
+      <div class="module-list" id="home-module-list"></div>
+      <button class="btn-primary" onclick="goTo('form')">Configurar Análise →</button>
+      <p class="home-note">Busca real na web · Sem dados inventados · Focado no Brasil</p>
+    </div>
+  </div>
+
+  <!-- ── FORM ─────────────────────────────────── -->
+  <div id="screen-form" class="screen">
+    <div class="form-inner">
+      <div class="form-header">
+        <h2 class="logo">DIREXIUS</h2>
+        <p>Configure sua análise de mercado</p>
+      </div>
+
+      <!-- API Key banner -->
+      <div id="apikey-banner">
+        <strong>🔑 Chave de API necessária</strong><br>
+        Para usar a busca real na web, insira sua chave da API Anthropic.<br>
+        Obtenha gratuitamente em <a href="https://console.anthropic.com" target="_blank" style="color:#8b5cf6">console.anthropic.com</a>
+        <input type="password" id="api-key-input" placeholder="sk-ant-..." oninput="saveApiKey(this.value)" />
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(0, this)">Perfil & Nicho</button>
+        <button class="tab-btn" onclick="switchTab(1, this)">Módulos</button>
+      </div>
+
+      <!-- Tab 0: Perfil -->
+      <div id="tab-0" class="card">
+        <div class="fields">
+          <div class="info-box">
+            💡 O <strong>Nicho</strong> é o campo mais importante — ele define todas as buscas reais que a IA fará.
+          </div>
+          <div class="row2">
+            <div>
+              <label class="field-label">Nicho / Categoria <span class="req">*</span></label>
+              <input id="f-nicho" type="text" placeholder="ex: Merchandise Anime, Loja Geek, Mangá..." oninput="checkForm()" />
+            </div>
+            <div>
+              <label class="field-label">@ Usuário Instagram</label>
+              <input id="f-username" type="text" placeholder="hanaa.animes" />
+            </div>
+          </div>
+          <div class="row2">
+            <div>
+              <label class="field-label">Cidade / Região do público</label>
+              <input id="f-cidade" type="text" value="Baixada Fluminense / Rio de Janeiro" />
+            </div>
+            <div>
+              <label class="field-label">Seguidores atuais</label>
+              <input id="f-seguidores" type="number" placeholder="ex: 340" />
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Bio atual do perfil</label>
+            <textarea id="f-bio" rows="2" placeholder="Cole aqui a bio atual do Instagram..."></textarea>
+          </div>
+          <div class="row2">
+            <div>
+              <label class="field-label">Objetivo principal</label>
+              <input id="f-objetivo" type="text" placeholder="ex: Aumentar seguidores locais, atrair clientes..." />
+            </div>
+            <div>
+              <label class="field-label">Tom de voz da marca</label>
+              <input id="f-tom" type="text" value="animado e próximo da comunidade anime/geek" />
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Perfis concorrentes / referência</label>
+            <input id="f-concorrentes" type="text" placeholder="ex: @lojaanime_rj, @geekstore_brasil" />
+          </div>
+        </div>
+        <button class="btn-primary" id="btn-next-tab" onclick="switchTab(1, document.querySelectorAll('.tab-btn')[1])" disabled>
+          Selecionar Módulos →
+        </button>
+      </div>
+
+      <!-- Tab 1: Módulos -->
+      <div id="tab-1" class="card" style="display:none">
+        <div class="fields">
+          <p style="font-size:13px;color:#5a5870">
+            Selecione os módulos. Cada um faz buscas reais na web antes de gerar a estratégia.
+          </p>
+          <div id="module-select-list"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-back" onclick="switchTab(0, document.querySelectorAll('.tab-btn')[0])">←</button>
+          <button class="btn-primary" id="btn-run-all" onclick="runAll()" style="margin-top:0">
+            🌐 Buscar e Analisar (<span id="selected-count">5</span> módulos)
+          </button>
+        </div>
+        <p class="form-note" id="form-note" style="display:none">Preencha o campo <strong style="color:#8b5cf6">Nicho</strong> para continuar</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LOADING ──────────────────────────────── -->
+  <div id="screen-loading" class="screen">
+    <div class="spinner"></div>
+    <div>
+      <div class="loading-title" id="loading-title">Pesquisando na Web</div>
+      <p class="loading-msg" id="loading-msg">Inicializando...</p>
+      <p class="loading-sub">Buscando dados reais do seu nicho</p>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span id="progress-label">Módulo 0 de 0</span>
+        <span id="progress-pct" style="color:#8b5cf6">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="loading-modules" id="loading-modules-list"></div>
+  </div>
+
+  <!-- ── RESULT ───────────────────────────────── -->
+  <div id="screen-result" class="screen">
+    <div class="result-sidebar" id="result-sidebar">
+      <div class="sidebar-profile">
+        <span class="eyebrow" id="sb-nicho">Nicho</span>
+        <div class="sidebar-profile-name" id="sb-username">@perfil</div>
+        <div class="sidebar-profile-city" id="sb-cidade">Cidade</div>
+      </div>
+      <div id="sidebar-mod-btns"></div>
+      <div class="sidebar-actions">
+        <button class="btn-outline" onclick="goTo('form')">← Editar</button>
+        <button class="btn-outline" style="border-color:#8b5cf6;color:#8b5cf6" onclick="resetAll()">+ Novo</button>
+      </div>
+    </div>
+    <div class="result-main" id="result-main">
+      <div class="result-empty">
+        <div class="result-empty-icon">👈</div>
+        <p>Selecione um módulo na barra lateral<br>para ver a análise ou iniciar uma nova</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ─── DATA ──────────────────────────────────────────────────────────────────
+
+  const ANALYSES = [
+    {
+      id: "mercado", icon: "🌐", label: "Pesquisa de Mercado Real", color: "#3b82f6",
+      desc: "Busca dados reais do nicho, tendências e benchmarks atuais",
+      queries: f => [
+        `nicho ${f.nicho} Instagram Brasil 2025 tendências crescimento`,
+        `hashtags ${f.nicho} Instagram Brasil mais usadas engajamento 2025`,
+        `mercado ${f.nicho} ${f.cidade} pequenos negócios redes sociais`,
+      ],
+    },
+    {
+      id: "hashtags", icon: "#️⃣", label: "Hashtags & SEO Real", color: "#8b5cf6",
+      desc: "Hashtags reais do nicho com dados de alcance e competitividade",
+      queries: f => [
+        `melhores hashtags ${f.nicho} Instagram 2025 alcance nicho Brasil`,
+        `SEO Instagram ${f.nicho} palavras chave pesquisa orgânica 2025`,
+        `hashtags locais ${f.cidade} Instagram negócios pequenos`,
+      ],
+    },
+    {
+      id: "algoritmo", icon: "⚙️", label: "Algoritmo & Formato", color: "#f59e0b",
+      desc: "Como o algoritmo do Instagram trata este nicho agora",
+      queries: f => [
+        `algoritmo Instagram 2025 2026 ${f.nicho} Reels formato melhor`,
+        `como crescer Instagram ${f.nicho} organicamente Brasil estratégia`,
+        `Instagram Reels vs carrossel vs foto ${f.nicho} engajamento 2025`,
+      ],
+    },
+    {
+      id: "conteudo", icon: "🎬", label: "Conteúdo em Alta", color: "#ef4444",
+      desc: "Tipos de posts que estão viralizando no nicho agora",
+      queries: f => [
+        `conteúdo viral ${f.nicho} Instagram 2025 ideias posts`,
+        `roteiro Reels ${f.nicho} Instagram hook engajamento`,
+        `tendências conteúdo ${f.nicho} redes sociais Brasil 2025`,
+      ],
+    },
+    {
+      id: "concorrentes", icon: "⚔️", label: "Inteligência Competitiva", color: "#10b981",
+      desc: "O que os concorrentes estão fazendo e onde está a brecha",
+      queries: f => [
+        `perfis ${f.nicho} Instagram Brasil crescimento referência 2025`,
+        `estratégia concorrentes ${f.nicho} redes sociais pequeno negócio`,
+        `diferenciação ${f.nicho} ${f.cidade} Instagram marketing digital`,
+      ],
+    },
+    {
+      id: "postagem", icon: "📝", label: "Como Postar Certo", color: "#06b6d4",
+      desc: "Formato ideal, horário, legenda e CTA para este nicho",
+      queries: f => [
+        `melhor horário postar Instagram ${f.nicho} Brasil engajamento 2025`,
+        `legenda Instagram ${f.nicho} SEO CTA conversão seguidores`,
+        `formato postagem ideal ${f.nicho} Instagram crescimento orgânico`,
+      ],
+    },
+  ];
+
+  // ─── STATE ─────────────────────────────────────────────────────────────────
+
+  let apiKey = localStorage.getItem('direxius_apikey') || '';
+  let selectedAnalyses = new Set(["mercado", "hashtags", "algoritmo", "conteudo", "postagem"]);
+  let results = {};
+  let activeResultId = null;
+
+  function getForm() {
+    return {
+      nicho: document.getElementById('f-nicho').value.trim(),
+      username: document.getElementById('f-username').value.trim(),
+      cidade: document.getElementById('f-cidade').value.trim() || 'Baixada Fluminense / Rio de Janeiro',
+      seguidores: document.getElementById('f-seguidores').value.trim(),
+      bio: document.getElementById('f-bio').value.trim(),
+      objetivo: document.getElementById('f-objetivo').value.trim(),
+      tom: document.getElementById('f-tom').value.trim() || 'animado e próximo da comunidade',
+      concorrentes: document.getElementById('f-concorrentes').value.trim(),
+    };
+  }
+
+  // ─── INIT ──────────────────────────────────────────────────────────────────
+
+  window.onload = function() {
+    // Restore API key
+    if (apiKey) document.getElementById('api-key-input').value = apiKey;
+
+    // Build home module list
+    const homeList = document.getElementById('home-module-list');
+    ANALYSES.forEach(a => {
+      homeList.innerHTML += `
+        <div class="module-item">
+          <span class="module-item-icon">${a.icon}</span>
+          <div>
+            <div class="module-item-label" style="color:${a.color}">${a.label}</div>
+            <div class="module-item-desc">${a.desc}</div>
+          </div>
+          <div class="module-dot" style="background:${a.color};box-shadow:0 0 8px ${a.color}"></div>
+        </div>`;
+    });
+
+    // Build module select list
+    buildModuleSelectList();
+
+    // Build loading modules list
+    const loadingList = document.getElementById('loading-modules-list');
+    ANALYSES.forEach(a => {
+      loadingList.innerHTML += `<div class="loading-mod"><span>${a.icon}</span><span>${a.label}</span></div>`;
+    });
+  };
+
+  function buildModuleSelectList() {
+    const list = document.getElementById('module-select-list');
+    list.innerHTML = '';
+    ANALYSES.forEach(a => {
+      const sel = selectedAnalyses.has(a.id);
+      list.innerHTML += `
+        <button class="module-select-btn ${sel ? 'selected' : ''}" id="msel-${a.id}"
+          style="border-color:${sel ? a.color : '#1e1e32'}"
+          onclick="toggleModule('${a.id}', '${a.color}')">
+          <span class="module-select-btn-icon">${a.icon}</span>
+          <div>
+            <div class="module-select-btn-label">${a.label}</div>
+            <div class="module-select-btn-desc">${a.desc}</div>
+          </div>
+          <div class="module-check" id="mcheck-${a.id}">${sel ? '✓' : ''}</div>
+        </button>`;
+    });
+    updateSelectedCount();
+  }
+
+  function toggleModule(id, color) {
+    if (selectedAnalyses.has(id)) {
+      selectedAnalyses.delete(id);
+    } else {
+      selectedAnalyses.add(id);
+    }
+    const btn = document.getElementById(`msel-${id}`);
+    const check = document.getElementById(`mcheck-${id}`);
+    const sel = selectedAnalyses.has(id);
+    btn.classList.toggle('selected', sel);
+    btn.style.borderColor = sel ? color : '#1e1e32';
+    btn.style.background = sel ? `${color}12` : '#08080f';
+    btn.querySelector('.module-select-btn-label').style.color = sel ? color : '#6a6a8a';
+    check.style.background = sel ? color : 'transparent';
+    check.style.borderColor = sel ? color : '#2a2a3a';
+    check.textContent = sel ? '✓' : '';
+    updateSelectedCount();
+  }
+
+  function updateSelectedCount() {
+    document.getElementById('selected-count').textContent = selectedAnalyses.size;
+  }
+
+  // ─── NAVIGATION ────────────────────────────────────────────────────────────
+
+  function goTo(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + screenId).classList.add('active');
+  }
+
+  function switchTab(idx, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-0').style.display = idx === 0 ? 'block' : 'none';
+    document.getElementById('tab-1').style.display = idx === 1 ? 'block' : 'none';
+  }
+
+  function checkForm() {
+    const nicho = document.getElementById('f-nicho').value.trim();
+    document.getElementById('btn-next-tab').disabled = !nicho;
+    document.getElementById('btn-run-all').disabled = !nicho || selectedAnalyses.size === 0;
+    document.getElementById('form-note').style.display = nicho ? 'none' : 'block';
+  }
+
+  function saveApiKey(val) {
+    apiKey = val;
+    localStorage.setItem('direxius_apikey', val);
+  }
+
+  function resetAll() {
+    results = {};
+    activeResultId = null;
+    goTo('form');
+  }
+
+  // ─── RUN ANALYSIS ──────────────────────────────────────────────────────────
+
+  async function runAll() {
+    if (!apiKey) { alert('Insira sua chave de API Anthropic no campo acima.'); return; }
+    const form = getForm();
+    if (!form.nicho) { alert('Preencha o campo Nicho.'); return; }
+
+    const toRun = ANALYSES.filter(a => selectedAnalyses.has(a.id));
+    if (toRun.length === 0) { alert('Selecione pelo menos um módulo.'); return; }
+
+    results = {};
+    activeResultId = null;
+
+    goTo('loading');
+    setProgress(0, toRun.length, '');
+
+    for (let i = 0; i < toRun.length; i++) {
+      const analysis = toRun[i];
+      setProgress(i + 1, toRun.length, analysis.label);
+      try {
+        results[analysis.id] = await fetchAnalysis(analysis, form, apiKey);
+      } catch(e) {
+        results[analysis.id] = { error: 'Falha nesta análise: ' + e.message };
+      }
+    }
+
+    buildResultScreen(form, toRun[0].id);
+    goTo('result');
+  }
+
+  async function runSingle(analysisId) {
+    if (!apiKey) { alert('Insira sua chave de API Anthropic.'); return; }
+    const form = getForm();
+    if (!form.nicho) { alert('Preencha o campo Nicho.'); return; }
+
+    const analysis = ANALYSES.find(a => a.id === analysisId);
+    if (!analysis) return;
+
+    // Mark as loading in sidebar
+    const sbBtn = document.getElementById('sb-btn-' + analysisId);
+    if (sbBtn) {
+      sbBtn.querySelector('.sidebar-mod-status').textContent = 'buscando...';
+    }
+
+    try {
+      results[analysisId] = await fetchAnalysis(analysis, form, apiKey);
+    } catch(e) {
+      results[analysisId] = { error: 'Falha: ' + e.message };
+    }
+
+    updateSidebarBtn(analysisId, analysis.color);
+    showResult(analysisId);
+  }
+
+  function setProgress(current, total, label) {
+    const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+    document.getElementById('progress-label').textContent = `Módulo ${current} de ${total}`;
+    document.getElementById('loading-msg').textContent = label || 'Processando...';
+  }
+
+  // ─── API ───────────────────────────────────────────────────────────────────
+
+  async function fetchAnalysis(analysis, form, key) {
+    const systemPrompt = `Você é o motor de inteligência da Direxius — plataforma brasileira de crescimento digital para pequenos negócios.
+Você tem acesso a busca na web e DEVE usá-la para encontrar dados reais e atuais antes de gerar qualquer análise.
+Sempre responda em português brasileiro. Seja direto, prático e específico para o nicho e região informados.
+Nunca invente dados — baseie suas análises no que encontrar nas buscas.`;
+
+    const userPrompt = buildPrompt(analysis.id, form);
+
+    const body = {
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      system: systemPrompt,
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+      messages: [{ role: "user", content: userPrompt }],
+    };
+
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const textBlocks = (data.content || []).filter(b => b.type === "text");
+    let text = textBlocks.map(b => b.text).join("\n").trim();
+
+    // Handle tool-use continuation if no text yet
+    if (!text) {
+      const toolUses = (data.content || []).filter(b => b.type === "tool_use");
+      if (toolUses.length > 0) {
+        const contBody = {
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: systemPrompt,
+          tools: [{ type: "web_search_20250305", name: "web_search" }],
+          messages: [
+            { role: "user", content: userPrompt },
+            { role: "assistant", content: data.content },
+            {
+              role: "user",
+              content: toolUses.map(tu => ({
+                type: "tool_result",
+                tool_use_id: tu.id,
+                content: "Resultados recebidos. Continue com a análise completa.",
+              })),
+            },
+          ],
+        };
+        const contRes = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+          body: JSON.stringify(contBody),
+        });
+        const contData = await contRes.json();
+        text = (contData.content || []).filter(b => b.type === "text").map(b => b.text).join("\n").trim();
+      }
+    }
+
+    return { text: text || "Análise concluída sem texto retornado.", raw: data };
+  }
+
+  // ─── PROMPTS ───────────────────────────────────────────────────────────────
+
+  function buildPrompt(id, f) {
+    const ctx = `
+**PERFIL:** @${f.username || 'N/A'} | **Nicho:** ${f.nicho} | **Cidade:** ${f.cidade}
+**Bio:** ${f.bio || 'N/A'} | **Seguidores:** ${f.seguidores || 'N/A'}
+**Objetivo:** ${f.objetivo || 'N/A'} | **Tom:** ${f.tom}
+**Concorrentes:** ${f.concorrentes || 'N/A'}
+`;
+    const prompts = {
+      mercado: `${ctx}
+Usando busca na web, pesquise dados REAIS e ATUAIS sobre o nicho e o mercado.
+
+Com base nos resultados encontrados, gere:
+
+**📊 PANORAMA DO MERCADO**
+Tamanho e crescimento do nicho ${f.nicho} no Brasil e em ${f.cidade}. Dados reais encontrados.
+
+**👥 PERFIL DO PÚBLICO**
+Quem é o consumidor deste nicho em ${f.cidade}. Comportamento de consumo. Como descobrem marcas no Instagram.
+
+**📈 TENDÊNCIAS ATUAIS**
+O que está crescendo neste nicho agora. Formatos de conteúdo em alta.
+
+**🎯 OPORTUNIDADE ESPECÍFICA**
+Onde está a maior brecha de mercado para @${f.username || 'este perfil'} em ${f.cidade} agora.
+
+**⚡ AÇÃO IMEDIATA**
+A única coisa mais valiosa para fazer nos próximos 7 dias.`,
+
+      hashtags: `${ctx}
+Usando busca na web, pesquise hashtags e SEO reais para este nicho.
+
+**#️⃣ GRUPO 1 — NICHO FECHADO**
+10 hashtags específicas para ${f.nicho}. Para cada uma: nome, tamanho estimado, por que usar.
+
+**📍 GRUPO 2 — GEOLOCALIZAÇÃO**
+10 hashtags de localização para ${f.cidade}. Para cada uma: nome, contexto de uso.
+
+**🌐 GRUPO 3 — DESCOBERTA**
+10 hashtags de crescimento amplo mas relevante.
+
+**🔍 SEO DO PERFIL**
+Nome de usuário ideal, palavras-chave para bio, alt text padrão, palavras-chave para legendas.
+
+**📋 TEMPLATE DE LEGENDA**
+Exemplo de legenda otimizada para SEO com os elementos corretos.`,
+
+      algoritmo: `${ctx}
+Usando busca na web, pesquise como o algoritmo do Instagram trata este nicho.
+
+**⚙️ COMO O ALGORITMO VÊ ESTE NICHO**
+O que o algoritmo prioriza para ${f.nicho} em 2025/2026.
+
+**✅ SINAIS QUE AUMENTAM ALCANCE**
+Comportamentos e formatos que o algoritmo recompensa.
+
+**❌ SINAIS QUE DIMINUEM ALCANCE**
+O que está custando visibilidade. O que evitar.
+
+**🎯 FORMATO IDEAL**
+Reel/Carrossel/Foto/Stories — qual tem melhor desempenho para ${f.nicho} agora e por quê.
+
+**⏰ TIMING PERFEITO**
+Horários e dias com maior alcance para o público de ${f.nicho} em ${f.cidade}.
+
+**📐 ESTRUTURA DO POST IDEAL**
+Como estruturar cada tipo de post para maximizar distribuição.`,
+
+      conteudo: `${ctx}
+Usando busca na web, pesquise conteúdo em alta para este nicho.
+
+**🔥 5 IDEIAS DE REELS COM ALTO POTENCIAL**
+Para cada Reel: título, hook de abertura palavra por palavra, estrutura de 15-30s, CTA, por que vai funcionar.
+
+**📱 CALENDÁRIO EDITORIAL — 4 SEMANAS**
+Semana 1, 2, 3, 4. Para cada semana: 3-4 posts com dia, formato, tema, gancho, horário, métrica-alvo.
+
+**💡 SÉRIES DE CONTEÚDO**
+2-3 ideias de série semanal que criam comunidade e antecipação.
+
+**🎵 ÁUDIOS EM TENDÊNCIA**
+Tipo de áudio/trilha que está performando para este nicho agora.`,
+
+      concorrentes: `${ctx}
+Usando busca na web, pesquise o cenário competitivo.
+
+**⚔️ MAPA COMPETITIVO**
+Perfis de referência no nicho ${f.nicho} no Brasil. Porte, frequência, tipo de conteúdo, pontos fortes e fracos.
+
+**🕳️ LACUNAS DE MERCADO**
+5 oportunidades de conteúdo que os concorrentes NÃO estão cobrindo bem.
+
+**🏆 VANTAGEM DE TERRITÓRIO**
+O que ser o melhor perfil de ${f.nicho} em ${f.cidade} pode significar.
+
+**🎯 DIFERENCIAÇÃO IMEDIATA**
+3 movimentos concretos para ocupar espaço único nos próximos 30 dias.
+
+**📊 BENCHMARKS REAIS DO NICHO**
+Taxa de engajamento esperada, crescimento semanal realista, frequência dos melhores perfis.`,
+
+      postagem: `${ctx}
+Usando busca na web, pesquise as melhores práticas de postagem para este nicho.
+
+**⏰ QUANDO POSTAR**
+Horários e dias com maior engajamento para ${f.nicho} em ${f.cidade}. Dados reais.
+
+**📐 FORMATO IDEAL POR TIPO**
+• Reels: duração, proporção, texto na tela, legendas, áudio
+• Carrossel: número de slides, primeiro e último slide
+• Foto estática: o que ainda funciona para este nicho
+• Stories: frequência, tipos de sticker, como aumentar entregabilidade
+
+**✍️ ANATOMIA DA LEGENDA PERFEITA**
+Tamanho ideal, palavras-chave, como abrir, como fechar, CTA que gera DM vs salvar vs seguir.
+
+**📸 VISUAL E IDENTIDADE**
+Paleta, estética, estilo que funciona para ${f.nicho} no Instagram brasileiro.
+
+**🔁 CHECKLIST PRÉ-PUBLICAÇÃO**
+Lista de 10-15 itens para checar antes de publicar qualquer post.`,
+    };
+    return prompts[id] || `Analise o perfil @${f.username} no nicho ${f.nicho} em ${f.cidade} e gere insights práticos de crescimento.`;
+  }
+
+  // ─── RESULT SCREEN ─────────────────────────────────────────────────────────
+
+  function buildResultScreen(form, firstId) {
+    // Sidebar profile
+    document.getElementById('sb-nicho').textContent = form.nicho;
+    document.getElementById('sb-username').textContent = '@' + (form.username || 'perfil');
+    document.getElementById('sb-cidade').textContent = form.cidade;
+
+    // Sidebar buttons
+    const btns = document.getElementById('sidebar-mod-btns');
+    btns.innerHTML = '';
+    ANALYSES.forEach(a => {
+      const done = !!results[a.id];
+      btns.innerHTML += `
+        <button class="sidebar-mod-btn ${done ? 'done' : ''}" id="sb-btn-${a.id}"
+          style="--mod-color:${a.color}" onclick="onSidebarClick('${a.id}')">
+          <span class="sidebar-mod-icon">${a.icon}</span>
+          <div style="flex:1;min-width:0">
+            <div class="sidebar-mod-label">${a.label}</div>
+            <div class="sidebar-mod-status">${done ? '✓ concluído' : 'clique para analisar'}</div>
+          </div>
+        </button>`;
+    });
+
+    // Show first result
+    activeResultId = firstId;
+    showResult(firstId);
+  }
+
+  function onSidebarClick(id) {
+    if (results[id]) {
+      showResult(id);
+    } else {
+      runSingle(id);
+    }
+  }
+
+  function updateSidebarBtn(id, color) {
+    const btn = document.getElementById('sb-btn-' + id);
+    if (!btn) return;
+    btn.classList.add('done');
+    btn.querySelector('.sidebar-mod-status').textContent = '✓ concluído';
+  }
+
+  function showResult(id) {
+    activeResultId = id;
+    const analysis = ANALYSES.find(a => a.id === id);
+    const data = results[id];
+    const main = document.getElementById('result-main');
+
+    // Update active sidebar btn
+    document.querySelectorAll('.sidebar-mod-btn').forEach(b => b.classList.remove('active'));
+    const activeBtn = document.getElementById('sb-btn-' + id);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    if (!data) {
+      main.innerHTML = `<div class="result-empty"><div class="result-empty-icon">⏳</div><p>Análise em andamento...</p></div>`;
+      return;
+    }
+
+    const date = new Date().toLocaleDateString('pt-BR');
+    let content = '';
+
+    if (data.error) {
+      content = `<div class="result-error">${data.error}</div>`;
+    } else {
+      content = renderResultText(data.text, analysis?.color || '#8b5cf6');
+    }
+
+    main.innerHTML = `
+      <div class="result-header">
+        <span class="result-header-icon">${analysis?.icon || '📊'}</span>
+        <div>
+          <h2 style="color:${analysis?.color || '#8b5cf6'}">${analysis?.label || 'Análise'}</h2>
+          <p class="result-header-sub">Baseado em pesquisa real da web · ${date}</p>
+        </div>
+        <button class="btn-outline" onclick="exportResult('${id}')">⬇ Exportar</button>
+      </div>
+      ${content}
+    `;
+  }
+
+  function renderResultText(text, color) {
+    const sections = splitSections(text);
+    if (sections.length <= 1) {
+      return `<div class="result-plain">${formatText(text)}</div>`;
+    }
+    return `<div class="result-sections">${sections.map((s, i) => renderSection(s, i, color)).join('')}</div>`;
+  }
+
+  function renderSection(sec, idx, color) {
+    if (!sec.title) {
+      return `<div class="result-plain">${formatText(sec.body)}</div>`;
+    }
+    const emoji = sec.title.match(/^[\u{1F300}-\u{1FAFF}⚔️#️⃣⚙️📝🔍🎬🌐⭐💬🔬👤📊📅📈⚡]/u)?.[0] || '•';
+    const titleText = sec.title.replace(/^[\u{1F300}-\u{1FAFF}⚔️#️⃣⚙️📝🔍🎬🌐⭐💬🔬👤📊📅📈⚡]\s*/u, '');
+    const openClass = idx === 0 ? 'open' : '';
+    return `
+      <div class="result-section ${openClass}" style="--sec-color:${color}" id="sec-${idx}">
+        <button class="result-section-header" onclick="toggleSection('sec-${idx}')">
+          <span class="result-section-emoji">${emoji}</span>
+          <span class="result-section-title">${titleText}</span>
+          <span class="result-section-chevron">▼</span>
+        </button>
+        <div class="result-section-body">${formatText(sec.body)}</div>
+      </div>`;
+  }
+
+  function toggleSection(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  function formatText(text) {
+    if (!text) return '';
+    // Bold
+    text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    // Escape remaining HTML-ish chars that aren't our tags
+    return text;
+  }
+
+  function splitSections(text) {
+    if (!text) return [];
+    const lines = text.split('\n');
+    const sections = [];
+    let current = { title: null, body: '' };
+    for (const line of lines) {
+      const m = line.match(/^\*\*([^*]+)\*\*\s*$/) || line.match(/^#{1,3}\s+(.+)/);
+      if (m) {
+        if (current.body.trim() || current.title) sections.push(current);
+        current = { title: m[1].trim(), body: '' };
+      } else {
+        current.body += line + '\n';
+      }
+    }
+    if (current.body.trim() || current.title) sections.push(current);
+    return sections.filter(s => s.body.trim() || s.title);
+  }
+
+  function exportResult(id) {
+    const form = getForm();
+    const analysis = ANALYSES.find(a => a.id === id);
+    const data = results[id];
+    if (!data || !data.text) return;
+    const content = `DIREXIUS — ${analysis?.label || id}\n@${form.username || 'perfil'} · ${form.nicho} · ${form.cidade}\n${new Date().toLocaleDateString('pt-BR')}\n\n${data.text}`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
+    a.download = `direxius-${id}-${form.username || 'perfil'}.txt`;
+    a.click();
+  }
+
+  // Init check
+  checkForm();
+  </script>
+</body>
+</html>
